@@ -1,0 +1,87 @@
+# Model Provider Configuration
+# Supports: DeepSeek, OpenRouter, local endpoint
+# Provider selection: primary → fallback chain
+
+providers:
+  deepseek:
+    name: "DeepSeek"
+    base_url: "https://api.deepseek.com"
+    api_key_env: "DEEPSEEK_API_KEY"
+    models:
+      chat: "deepseek-chat"
+      coder: "deepseek-coder"
+      reasoner: "deepseek-reasoner"
+    rate_limit_rpm: 60
+    timeout_sec: 120
+    retry_count: 3
+
+  openrouter:
+    name: "OpenRouter"
+    base_url: "https://openrouter.ai/api"
+    api_key_env: "OPENROUTER_API_KEY"
+    models:
+      chat: "deepseek/deepseek-chat"
+      coder: "deepseek/deepseek-coder"
+      reasoner: "deepseek/deepseek-r1"
+    rate_limit_rpm: 30
+    timeout_sec: 120
+    retry_count: 3
+
+  local:
+    name: "Local Endpoint"
+    base_url: "${LOCAL_LLM_URL:-http://localhost:11434}"
+    api_key_env: "LOCAL_LLM_KEY"
+    models:
+      chat: "${LOCAL_CHAT_MODEL:-llama3}"
+      coder: "${LOCAL_CODER_MODEL:-codellama}"
+    rate_limit_rpm: 999
+    timeout_sec: 300
+    retry_count: 1
+
+# Fallback chain: try deepseek → openrouter → local
+fallback:
+  order: ["deepseek", "openrouter", "local"]
+  circuit_breaker:
+    failure_threshold: 5
+    open_seconds: 300
+
+# Agent roles → model mapping
+roles:
+  coding:
+    primary: "deepseek"
+    model: "coder"
+    temperature: 0.1
+    max_tokens: 4096
+  chat:
+    primary: "deepseek"
+    model: "chat"
+    temperature: 0.7
+    max_tokens: 2000
+  review:
+    primary: "deepseek"
+    model: "coder"
+    temperature: 0.2
+    max_tokens: 3000
+  test_writer:
+    primary: "deepseek"
+    model: "coder"
+    temperature: 0.1
+    max_tokens: 3000
+  debug:
+    primary: "deepseek"
+    model: "reasoner"
+    temperature: 0.1
+    max_tokens: 4096
+
+# Task templates
+tasks:
+  feature:
+    system_prompt: "You are a senior software engineer. Write production-quality code. Use existing patterns. No comments unless the WHY is non-obvious."
+  debug:
+    system_prompt: "You are a debugging expert. Find the root cause. Propose minimal fix. Explain your reasoning."
+  refactor:
+    system_prompt: "You are a refactoring specialist. Improve code quality without changing behavior. Follow existing project patterns."
+  review:
+    system_prompt: "You are a code reviewer. Find bugs, logic errors, security issues. Report only high-priority findings."
+  tests:
+    system_prompt: "You are a test engineer. Write thorough tests. Cover edge cases. Use existing test patterns."
