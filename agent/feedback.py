@@ -43,7 +43,8 @@ class FeedbackLoop:
     def record(self, profile: str, task: str, rating: int = 0, comment: str = "",
                user_id: int = 0, result_snippet: str = "") -> FeedbackEntry:
         entry = FeedbackEntry(profile, task, rating, comment, user_id, result_snippet)
-        with open(FEEDBACK_PATH, "a") as f:
+        fd = os.open(FEEDBACK_PATH, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
+        with os.fdopen(fd, "a") as f:
             f.write(json.dumps(entry.__dict__, ensure_ascii=False) + "\n")
         return entry
 
