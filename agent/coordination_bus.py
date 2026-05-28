@@ -134,5 +134,6 @@ class CoordinationBus:
 
     def _log(self, msg: AgentMessage):
         Path(self.log_path).parent.mkdir(parents=True, exist_ok=True)
-        with open(self.log_path, "a") as f:
+        fd = os.open(self.log_path, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
+        with os.fdopen(fd, "a") as f:
             f.write(json.dumps(msg.to_dict(), ensure_ascii=False) + "\n")

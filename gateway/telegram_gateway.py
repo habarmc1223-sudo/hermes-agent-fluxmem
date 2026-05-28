@@ -106,7 +106,8 @@ def _save_feedback_entry(profile: str, task: str, result: str, user_id: int):
     try:
         path = Path(os.getenv("HERMES_STATE_DIR", Path.home() / ".hermes" / "state"))
         path.mkdir(parents=True, exist_ok=True)
-        with open(path / "feedback.jsonl", "a") as f:
+        fd = os.open(path / "feedback.jsonl", os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
+        with os.fdopen(fd, "a") as f:
             f.write(json.dumps(entry, ensure_ascii=False) + "\n")
     except Exception:
         pass
