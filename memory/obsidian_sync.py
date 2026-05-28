@@ -37,9 +37,11 @@ def _ensure_vault():
         token = os.getenv("GITHUB_TOKEN") or os.getenv("GH_TOKEN", "")
         if token:
             import subprocess
+            env = {**os.environ, "GIT_ASKPASS": "echo", "GIT_USERNAME": "x-access-token",
+                   "GIT_PASSWORD": token}
             subprocess.run(
-                ["git", "clone", f"https://{token}@github.com/habarmc1223-sudo/obsidian-vault.git",
-                 str(VAULT_CLONE)], capture_output=True, timeout=30
+                ["git", "clone", "https://github.com/habarmc1223-sudo/obsidian-vault.git",
+                 str(VAULT_CLONE)], capture_output=True, timeout=30, env=env
             )
     return VAULT_CLONE.exists()
 
