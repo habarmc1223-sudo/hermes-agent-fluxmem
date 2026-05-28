@@ -1130,3 +1130,13 @@ not the specific names.
 
 Reviewers should reject new change-detector tests; authors should convert
 them into invariants before re-requesting review.
+
+## Hermes Programmer Agent (added 2026-05-28)
+
+DeepSeek-powered coding executor at `skills/hermes-programmer/`:
+- **ProgrammerAgent**: multi-provider routing (DeepSeek → OpenRouter → local)
+- **TaskTemplates**: build_feature, debug_issue, refactor, code_review, write_tests
+- **ProviderRouter**: circuit breaker per provider, role-based model selection
+
+Config: `config/providers.yaml` in bot1 project.
+Integration: `/coder` command in Telegram bot → Hermes workflow → this agent.
