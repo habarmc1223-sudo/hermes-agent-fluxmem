@@ -1,0 +1,67 @@
+# GEPA — Generative Prompt Architecture
+# Auto-optimization of agent prompts and behavior through iterative testing.
+
+gepa:
+  enabled: true
+  schedule: "0 3 * * 0"  # weekly on Sunday at 3am
+
+  # Optimization targets
+  targets:
+    - type: soul
+      path: "~/.hermes/SOUL.md"
+      metric: "user_satisfaction"
+    - type: profile
+      profiles: ["orchestrator", "researcher", "programmer", "ops", "reviewer"]
+      metric: "task_completion_rate"
+    - type: skill
+      skills: ["hermes-programmer"]
+      metric: "code_quality"
+
+  # Testing pipeline
+  testing:
+    variants_per_target: 3
+    test_set_size: 20
+    evaluation_model: "deepseek-chat"
+    metrics:
+      - name: "clarity"
+        weight: 0.3
+        description: "How clear and unambiguous is the output?"
+      - name: "accuracy"
+        weight: 0.3
+        description: "How factually correct is the output?"
+      - name: "conciseness"
+        weight: 0.2
+        description: "Is the output appropriately brief?"
+      - name: "actionability"
+        weight: 0.2
+        description: "Can the user act on this output immediately?"
+
+  # A/B testing
+  ab_testing:
+    enabled: true
+    traffic_split: 0.2  # 20% of requests use variant
+    significance_threshold: 0.95
+    min_samples: 50
+    auto_apply_winner: false  # requires human approval
+
+  # Evolution feedback loop
+  feedback:
+    sources:
+      - type: explicit_rating
+        description: "User thumbs up/down on responses"
+      - type: implicit_signal
+        description: "Did user continue conversation or abandon?"
+      - type: task_success
+        description: "Was the delegated task completed successfully?"
+    storage: "memory/feedback.db"
+
+  # Optimization strategies
+  strategies:
+    - name: "temperature_tuning"
+      description: "Find optimal temperature per role"
+    - name: "prompt_compression"
+      description: "Reduce token count while preserving quality"
+    - name: "example_selection"
+      description: "Curate best few-shot examples"
+    - name: "instruction_ordering"
+      description: "Optimize order of system prompt sections"
