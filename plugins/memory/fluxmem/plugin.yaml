@@ -1,0 +1,9 @@
+name: fluxmem
+version: 1.0.0
+description: >
+  FluxMem — heterogeneous graph memory with continuous evolution. 
+  Three-stage memory formation (binding → refinement → consolidation),
+  entity extraction via LLM, graph traversal retrieval, and procedural index.
+pip_dependencies: []
+hooks:
+  - on_session_end
