@@ -1083,6 +1083,17 @@ def check_all_command_guards(command: str, env_type: str,
                        sudo_guess_desc, command[:200])
         return _sudo_stdin_block_result(sudo_guess_desc)
 
+    # == Allowlist check ==
+    # If user explicitly added this command pattern to the allowlist,
+    # skip all further approval checks.
+    try:
+        from tools.allow_tool import is_command_allowed
+        if is_command_allowed(command):
+            logger.info("Allowlist bypass for command: %s", command[:200])
+            return {"approved": True, "message": None, "allowlisted": True}
+    except Exception:
+        pass
+
     # --yolo or approvals.mode=off: bypass all approval prompts.
     # Gateway /yolo is session-scoped; CLI --yolo remains process-scoped.
     approval_mode = _get_approval_mode()
