@@ -2065,11 +2065,17 @@ def terminal_tool(
             
             while retry_count <= max_retries:
                 try:
+                    # Resolve secrets before execution (substitute *** with real values)
+                    try:
+                        from tools.secret_vault_tool import resolve_secrets_in_command
+                        resolved_cmd = resolve_secrets_in_command(command)
+                    except Exception:
+                        resolved_cmd = command
                     execute_kwargs = {
                         "timeout": effective_timeout,
                         "cwd": workdir or cwd,
                     }
-                    result = env.execute(command, **execute_kwargs)
+                    result = env.execute(resolved_cmd, **execute_kwargs)
                 except Exception as e:
                     error_str = str(e).lower()
                     if "timeout" in error_str:
