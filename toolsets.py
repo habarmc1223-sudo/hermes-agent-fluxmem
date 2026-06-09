@@ -70,6 +70,10 @@ _HERMES_CORE_TOOLS = [
     "kanban_unblock",
     # Computer use (macOS, gated on cua-driver being installed via check_fn)
     "computer_use",
+    # Admin — systemd, reboot scheduling, secret vault, per-task approval bypass
+    "schedule_reboot", "systemctl", "secret_vault", "allow",
+    # Multi-step undo — filesystem checkpoint management
+    "undo_checkpoint",
 ]
 
 # Webhook events may originate from untrusted third-party content (for example,

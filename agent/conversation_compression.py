@@ -368,6 +368,28 @@ def compress_context(
     if todo_snapshot:
         compressed.append({"role": "user", "content": todo_snapshot})
 
+    # Append a task marker so the model can see what was being done
+    # before compression happened.  Uses the currently active task from
+    # the todo list, or a generic placeholder.
+    try:
+        _active_tasks = list(agent._todo_store.list_todos().values())
+        _current_task = None
+        for t in _active_tasks:
+            if getattr(t, "status", "") == "in_progress":
+                _current_task = t.content
+                break
+        if _current_task:
+            _task_marker = f"[TASK: {_current_task}]"
+        elif _active_tasks:
+            # Show first pending task as a hint
+            _task_marker = "[TASK: " + _active_tasks[0].content[:80] + "]"
+        else:
+            _task_marker = "[CONTEXT COMPACTED — conversation history summarised below]"
+    except Exception:
+        _task_marker = "[CONTEXT COMPACTED — conversation history summarised below]"
+
+    compressed.append({"role": "user", "content": _task_marker})
+
     agent._invalidate_system_prompt()
     new_system_prompt = agent._build_system_prompt(system_message)
     agent._cached_system_prompt = new_system_prompt
