@@ -21,7 +21,16 @@ import shlex
 logger = logging.getLogger(__name__)
 
 # Broad patterns that would allow too many commands — reject at add time.
-_OVERBROAD_PATTERNS = frozenset({"sudo", "sh", "bash", "zsh", "fish", "python", "python3", "perl", "ruby", "node"})
+_OVERBROAD_PATTERNS = frozenset({
+    # Shell interpreters / script runners
+    "sudo", "sh", "bash", "zsh", "fish", "python", "python3", "perl", "ruby", "node",
+    # Network egress — can exfiltrate secrets or download/execute payloads
+    "curl", "wget", "ssh", "scp", "rsync", "nc", "ncat", "socat",
+    # Execution multipliers — each can invoke arbitrary commands
+    "xargs", "find", "awk", "env", "git",
+    # Container/orchestration — full privilege escalation surface
+    "docker", "kubectl",
+})
 
 # In-memory allowlist — keyed by session_key
 # Structure: {session_key: [str exact patterns]}
