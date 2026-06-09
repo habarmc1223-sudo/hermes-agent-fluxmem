@@ -976,6 +976,19 @@ def run_conversation(
         # every turn.  We send it as a single content string so the
         # bytes are byte-stable across turns and upstream prompt caches
         # stay warm.
+        #
+        # Plan Mode injects a system-prompt fragment when active.
+        if not agent.ephemeral_system_prompt:
+            agent.ephemeral_system_prompt = ""
+        try:
+            from agent.plan_mode import build_plan_mode_system_prompt
+            plan_mode_prompt = build_plan_mode_system_prompt(agent.session_id)
+            if plan_mode_prompt:
+                agent.ephemeral_system_prompt = (
+                    agent.ephemeral_system_prompt + plan_mode_prompt
+                )
+        except Exception:
+            pass
         effective_system = active_system_prompt or ""
         if agent.ephemeral_system_prompt:
             effective_system = (effective_system + "\n\n" + agent.ephemeral_system_prompt).strip()

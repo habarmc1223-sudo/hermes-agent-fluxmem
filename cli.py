@@ -8534,6 +8534,34 @@ class HermesCLI:
             self._handle_fast_command(cmd_original)
         elif canonical == "compress":
             self._manual_compress(cmd_original)
+        elif canonical == "plan":
+            from agent.plan_mode import set_plan_mode, status as plan_status
+            parts = cmd_original.split(None, 1)
+            arg = parts[1].strip().lower() if len(parts) > 1 else ""
+            if arg == "on":
+                result = set_plan_mode(self.session_id, True)
+                print(f"  ✅ Plan mode enabled — agent will show plans before executing tools.")
+            elif arg == "off":
+                result = set_plan_mode(self.session_id, False)
+                print(f"  Plan mode disabled.")
+            else:
+                result = plan_status(self.session_id)
+                print(f"  {'✅' if result['plan_mode'] else ''} Plan mode: {'ON' if result['plan_mode'] else 'OFF'}")
+                if result['plan_mode']:
+                    print(f"  Agent shows plans → waits for approval → executes on /go")
+        elif canonical == "go":
+            from agent.plan_mode import set_pending_plan, is_plan_mode
+            if not is_plan_mode(self.session_id):
+                print(f"  Plan mode is not active. Use /plan on to enable.")
+            else:
+                # Clear pending plan — next user message will get full tool access
+                set_pending_plan(self.session_id, False)
+                print(f"  ✅ Plan approved! Re-send your message to execute.")
+                # Disable plan mode for this one turn
+                set_pending_plan(self.session_id, False)
+                from agent.plan_mode import set_plan_mode as _spm
+                _spm(self.session_id, False)
+                print(f"  ℹ️  Plan mode turned off for this turn. Type /plan on to re-enable.")
         elif canonical == "usage":
             self._show_usage()
         elif canonical == "insights":

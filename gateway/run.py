@@ -7608,6 +7608,12 @@ class GatewayRunner:
         if canonical == "compress":
             return await self._handle_compress_command(event)
 
+        if canonical == "plan":
+            return await self._handle_plan_command(event)
+
+        if canonical == "go":
+            return await self._handle_go_command(event)
+
         if canonical == "usage":
             return await self._handle_usage_command(event)
 
@@ -12370,6 +12376,50 @@ class GatewayRunner:
         except Exception as e:
             logger.warning("Manual compress failed: %s", e)
             return t("gateway.compress.failed", error=e)
+
+    async def _handle_plan_command(self, event: MessageEvent) -> str:
+        """Handle /plan command — toggle or show plan mode."""
+        from agent.plan_mode import set_plan_mode, status as plan_status
+
+        source = event.source
+        session_entry = self.session_store.get_or_create_session(source)
+        session_id = session_entry.session_id
+
+        args = (event.get_command_args() or "").strip().lower()
+        if args == "on":
+            set_plan_mode(session_id, True)
+            return (
+                "✅ **Plan mode enabled**\n\n"
+                "The agent will now show a plan before executing any tools. "
+                "Review the plan, then use `/go` to approve execution, or "
+                "modify your request."
+            )
+        elif args == "off":
+            set_plan_mode(session_id, False)
+            return "Plan mode disabled."
+        else:
+            info = plan_status(session_id)
+            status_icon = "✅" if info["plan_mode"] else ""
+            return (
+                f"{status_icon} **Plan mode:** {'ON' if info['plan_mode'] else 'OFF'}\n\n"
+                f"{'Agent shows plans → waits for approval → executes on /go' if info['plan_mode'] else 'Agent executes tools immediately.'}"
+            )
+
+    async def _handle_go_command(self, event: MessageEvent) -> str:
+        """Handle /go command — approve a plan and let the agent execute."""
+        from agent.plan_mode import is_pending_plan, set_pending_plan, is_plan_mode
+
+        source = event.source
+        session_entry = self.session_store.get_or_create_session(source)
+        session_id = session_entry.session_id
+
+        if not is_plan_mode(session_id):
+            return "Plan mode is not active. Use `/plan on` to enable."
+        # Clear pending plan so next user message gets full tool access
+        set_pending_plan(session_id, False)
+        # Turn off plan mode for this one turn
+        set_plan_mode(session_id, False)
+        return "✅ **Plan approved!** Re-send your message to execute."
 
     async def _get_telegram_topic_capabilities(self, source: SessionSource) -> dict:
         """Read Telegram private-topic capability flags via Bot API getMe."""
