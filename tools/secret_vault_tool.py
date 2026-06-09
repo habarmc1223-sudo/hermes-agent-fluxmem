@@ -13,6 +13,7 @@ import json
 import logging
 import os
 import re
+import shlex
 
 logger = logging.getLogger(__name__)
 
@@ -172,9 +173,9 @@ def resolve_secrets_in_command(command: str) -> str:
         key = match.group(1)
         val = _secret_vault.get(key)
         if val is not None:
-            # Quote the value to prevent shell injection if used in shell=True context
-            # For list-based subprocess calls the terminal tool should NOT use shell=True
-            return val
+            # Commands are passed to `bash -c`, so quote to prevent injection
+            # via secret values containing shell metacharacters.
+            return shlex.quote(val)
         return match.group(0)  # leave unresolved handles as-is
 
     # Match $VAULT:KEY_NAME (key must be [A-Z0-9_]+)
