@@ -50,6 +50,8 @@ _HERMES_CORE_TOOLS = [
     "todo", "memory",
     # Session history search
     "session_search",
+    # Source-linked Markdown knowledge retrieval
+    "knowledge_search",
     # Clarifying questions
     "clarify",
     # Code execution + delegation
@@ -229,6 +231,12 @@ TOOLSETS = {
     "session_search": {
         "description": "Search and recall past conversations with summarization",
         "tools": ["session_search"],
+        "includes": []
+    },
+
+    "knowledge_search": {
+        "description": "Search source-linked Markdown knowledge notes",
+        "tools": ["knowledge_search"],
         "includes": []
     },
     

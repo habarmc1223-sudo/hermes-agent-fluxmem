@@ -444,7 +444,13 @@ class TestPreflightCompression:
                 approx_tokens=1234,
             )
 
-        assert compressed == [{"role": "user", "content": f"{SUMMARY_PREFIX}\nPrevious conversation"}]
+        assert compressed == [
+            {"role": "user", "content": f"{SUMMARY_PREFIX}\nPrevious conversation"},
+            {
+                "role": "user",
+                "content": "[CONTEXT COMPACTED — conversation history summarised below]",
+            },
+        ]
         assert new_system_prompt == "new system prompt"
         assert events[0][0] == "lifecycle"
         assert "Compacting context" in events[0][1]

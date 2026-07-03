@@ -335,9 +335,10 @@ class TestSlackNativeSlashes:
                 f"/{reserved} is a Slack built-in and must not appear in the manifest"
             )
 
-    def test_includes_aliases_as_first_class_slashes(self):
+    def test_includes_aliases_as_first_class_slashes(self, monkeypatch):
         """Aliases (/btw, /bg, /reset, /q) must be registered as standalone
         slashes — this is the whole point of native-slashes parity."""
+        monkeypatch.setattr("hermes_cli.commands._SLACK_MAX_SLASH_COMMANDS", 100)
         names = {n for n, _d, _h in slack_native_slashes()}
         assert "btw" in names
         assert "bg" in names
@@ -391,9 +392,10 @@ class TestSlackAppManifest:
             # HTML-escapes args — we want the raw text)
             assert "should_escape" in entry
 
-    def test_btw_is_in_manifest(self):
+    def test_btw_is_in_manifest(self, monkeypatch):
         """Regression: /btw must be a native Slack slash, not just a
         /hermes subcommand."""
+        monkeypatch.setattr("hermes_cli.commands._SLACK_MAX_SLASH_COMMANDS", 100)
         m = slack_app_manifest()
         commands = [c["command"] for c in m["features"]["slash_commands"]]
         assert "/btw" in commands
