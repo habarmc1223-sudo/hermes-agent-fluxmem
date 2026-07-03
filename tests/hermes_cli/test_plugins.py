@@ -1272,9 +1272,9 @@ class TestPluginCommands:
         ctx = PluginContext(manifest, mgr)
 
         received = []
-        ctx.register_command("echo", lambda args: received.append(args) or "ok")
+        ctx.register_command("raw-args", lambda args: received.append(args) or "ok")
 
-        handler = mgr._plugin_commands["echo"]["handler"]
+        handler = mgr._plugin_commands["raw-args"]["handler"]
         handler("hello world")
         assert received == ["hello world"]
 

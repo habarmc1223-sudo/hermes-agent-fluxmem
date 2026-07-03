@@ -247,7 +247,9 @@ class TestAppMentionHandler:
         import re as _re
 
         assert isinstance(slash_matcher, _re.Pattern)
-        for expected in ("/hermes", "/btw", "/stop", "/model", "/help"):
+        # Canonical commands take priority when Slack's 50-command cap is
+        # reached, so aliases such as /btw are not guaranteed a slot.
+        for expected in ("/hermes", "/background", "/stop", "/model", "/help"):
             assert slash_matcher.match(
                 expected
             ), f"Slack slash regex does not match {expected}"
