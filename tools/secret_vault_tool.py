@@ -74,7 +74,7 @@ def _init_vault():
     env_path = os.path.join(home, ".env")
     _ENV_PATH = env_path
     if os.path.exists(env_path):
-        with open(env_path) as f:
+        with open(env_path, encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if not line or line.startswith("#") or "=" not in line:

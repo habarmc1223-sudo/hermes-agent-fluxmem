@@ -29,7 +29,7 @@ def record_metric(agent: str, metric: str, value: float, task_id: str = ""):
         "task_id": task_id,
         "timestamp": datetime.now().isoformat(),
     }
-    with open(METRICS_DB, "a") as f:
+    with open(METRICS_DB, "a", encoding="utf-8") as f:
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
 
