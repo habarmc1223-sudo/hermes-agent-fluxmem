@@ -232,13 +232,8 @@ def test_compression_restores_user_turn_when_compressor_drops_all_users(tmp_path
 
     compressed, _sp = agent._compress_context(messages, "sys", approx_tokens=120_000)
 
-    # The real dropped user turn must be restored FIRST (this guard's job);
-    # the task-aware compression marker is appended after, as an additional
-    # (not a replacement) user-role hint for the model.
     user_messages = [msg for msg in compressed if msg.get("role") == "user"]
-    assert user_messages[0] == {"role": "user", "content": "please continue from here"}
-    assert len(user_messages) == 2
-    assert user_messages[1]["content"].startswith("[CONTEXT COMPACTED") or user_messages[1]["content"].startswith("[TASK:")
+    assert user_messages == [{"role": "user", "content": "please continue from here"}]
 
 
 def test_lock_refresh_keeps_owner_live_past_initial_ttl(tmp_path: Path, monkeypatch) -> None:

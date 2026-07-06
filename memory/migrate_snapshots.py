@@ -17,7 +17,7 @@ from memory.facts_repo import MemoryRepo
 
 def load_json(path: Path) -> dict | None:
     try:
-        return json.loads(path.read_text())
+        return json.loads(path.read_text(encoding="utf-8"))
     except Exception:
         return None
 

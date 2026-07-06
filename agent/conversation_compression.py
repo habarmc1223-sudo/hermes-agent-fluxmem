@@ -697,8 +697,12 @@ def compress_context(
         _ensure_compressed_has_user_turn(messages, compressed)
 
         # Append a task marker so the model can see what was being done
-        # before compression happened.  Uses the currently active task from
-        # the todo list, or a generic placeholder.
+        # before compression happened — but only when there's an actual
+        # active/pending task to report. With nothing to say, stay silent:
+        # _ensure_compressed_has_user_turn above already guarantees a user
+        # turn exists, so a generic placeholder here would just be a second,
+        # redundant message (and would break tests/callers asserting the
+        # compacted transcript is exactly what the compressor returned).
         try:
             _active_tasks = list(agent._todo_store.list_todos().values())
             _current_task = None
@@ -712,11 +716,12 @@ def compress_context(
                 # Show first pending task as a hint
                 _task_marker = "[TASK: " + _active_tasks[0].content[:80] + "]"
             else:
-                _task_marker = "[CONTEXT COMPACTED — conversation history summarised below]"
+                _task_marker = None
         except Exception:
-            _task_marker = "[CONTEXT COMPACTED — conversation history summarised below]"
+            _task_marker = None
 
-        compressed.append({"role": "user", "content": _task_marker})
+        if _task_marker:
+            compressed.append({"role": "user", "content": _task_marker})
 
         agent._invalidate_system_prompt()
         new_system_prompt = agent._build_system_prompt(system_message)
