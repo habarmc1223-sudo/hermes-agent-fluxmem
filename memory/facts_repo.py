@@ -250,10 +250,6 @@ class MemoryRepo:
         {'dev'}       → code / architecture decisions
     """
 
-    SCOPE_TO_MODEL = {
-        frozenset({"personal"}): "local_lm_studio",
-    }
-
     def __init__(self, allowed_scopes: set[str], db_path: Path = DB_PATH):
         self.allowed = frozenset(allowed_scopes)
         self._con = _connect(db_path)
@@ -362,6 +358,11 @@ class MemoryRepo:
         ).fetchone()
         if not d:
             return {}
+        # Unlike every other read here, this looks up by decision_id alone —
+        # without this check a repo scoped to e.g. {'wb'} could pull another
+        # scope's decision (and, via the join below, its underlying facts)
+        # just by knowing/guessing the id.
+        self._check_scope(d["scope"])
         inputs = self._con.execute(
             "SELECT f.subject, f.predicate, f.object, f.source_ref, f.valid_from "
             "FROM decision_inputs di JOIN facts f ON f.version_id=di.version_id "
@@ -374,7 +375,15 @@ class MemoryRepo:
         }
 
     def route_model(self) -> str:
-        return self.SCOPE_TO_MODEL.get(self.allowed, "deepseek")
+        # Membership, not exact frozenset equality: a repo scoped to e.g.
+        # {'personal', 'wb'} must still stay local. An exact-match lookup
+        # would silently fall through to the "deepseek" default for any
+        # scope combination other than {'personal'} alone — a fail-open
+        # privacy leak for a routing rule that exists precisely to keep
+        # personal-scope facts off the cloud model.
+        if "personal" in self.allowed:
+            return "local_lm_studio"
+        return "deepseek"
 
     def close(self) -> None:
         self._con.close()

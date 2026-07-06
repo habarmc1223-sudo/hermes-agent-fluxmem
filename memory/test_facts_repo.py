@@ -187,6 +187,21 @@ def test_decision_log_and_trace(tmp_repo):
     assert "sku:WB-123" in subjects
 
 
+def test_trace_decision_denies_cross_scope_access(tmp_db):
+    """A repo scoped to 'wb' must not read a decision logged under 'personal',
+    even knowing its decision_id (IDOR-style cross-object reference)."""
+    _, db = tmp_db
+    personal_repo = MemoryRepo(allowed_scopes={"personal"}, db_path=db)
+    vid = personal_repo.assert_fact("user:marina", "phone", "+7999", "2026-01-01", "manual")
+    did = personal_repo.log_decision(kind="contact_update", summary="stored phone", version_ids=[vid])
+    personal_repo.close()
+
+    wb_repo = MemoryRepo(allowed_scopes={"wb"}, db_path=db)
+    with pytest.raises(PermissionError):
+        wb_repo.trace_decision(did)
+    wb_repo.close()
+
+
 # ── MemoryRepo convenience ───────────────────────────────────────────────────
 
 def test_repo_read_current(tmp_repo):
@@ -194,6 +209,21 @@ def test_repo_read_current(tmp_repo):
     result = tmp_repo.read_current("competitor:ЦПВС", "price")
     assert len(result) == 1
     assert result[0]["object"] == "1299"
+
+
+def test_route_model_stays_local_when_personal_combined_with_other_scope(tmp_db):
+    """route_model must key off *membership*, not exact-set equality: a repo
+    scoped to {'personal', 'wb'} still carries personal data and must not
+    fail open to the cloud model just because the scope set isn't exactly
+    {'personal'}."""
+    _, db = tmp_db
+    repo = MemoryRepo(allowed_scopes={"personal", "wb"}, db_path=db)
+    assert repo.route_model() == "local_lm_studio"
+    repo.close()
+
+    wb_only = MemoryRepo(allowed_scopes={"wb"}, db_path=db)
+    assert wb_only.route_model() == "deepseek"
+    wb_only.close()
 
 
 def test_repo_history(tmp_repo):
